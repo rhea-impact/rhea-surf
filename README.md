@@ -1,81 +1,144 @@
 # rhea-surf
 
-Browser automation for local/offline LLMs via opencode.
+Browser automation for local LLMs. $0 inference cost via Ollama.
 
-## Problem
+## What It Does
 
-Perplexity Comet's browser agent hits token limits on complex workflows. We need browser automation that works with **local models** (Ollama, LM Studio) to avoid cloud rate limits.
-
-## Solution
-
-Leverage existing infrastructure:
-- **Helios** - Already have MCP server + Chrome extension for browser control
-- **opencode** - CLI tool like Claude Code but for open-source models
-- **Local LLMs** - DeepSeek-R1-Distill, Llama 3, Mistral via Ollama
-
-## Architecture
+Autonomous browser agent that navigates websites and extracts information using local models only. Designed for correctness over speed.
 
 ```
 ┌─────────────────┐      MCP         ┌─────────────────┐
-│    opencode     │◄────────────────►│  Helios Server  │
-│  (local LLM)    │                  │                 │
+│   SurfAgent     │◄────────────────►│  Helios Server  │
+│  (Playwright)   │                  │                 │
 └─────────────────┘                  └────────┬────────┘
         │                                     │
         │ Ollama API                   Native Messaging
         ▼                                     ▼
 ┌─────────────────┐                  ┌─────────────────┐
-│  Local Model    │                  │ Chrome Extension│
-│  (DeepSeek/     │                  │  (your browser) │
-│   Llama 3)      │                  └─────────────────┘
+│  Local Models   │                  │ Chrome Extension│
+│  llama3, qwen3  │                  │  (your browser) │
+│  llama3.2-vision│                  └─────────────────┘
 └─────────────────┘
 ```
 
-## Status
+## Quick Start
 
-✅ **Validated** - OpenCode confirmed to support MCP servers + Ollama. Ready for implementation.
+```bash
+# Install
+pip install -e .
 
-See [docs/research/opencode-validated.md](docs/research/opencode-validated.md) for full research findings.
+# Run a task
+python -m surf.cli "What is the top story on Hacker News?"
+
+# Run study session (self-improvement tracking)
+python -m surf.study
+```
 
 ## Components
 
-| Component | Status | Location |
+| Component | Status | Description |
+|-----------|--------|-------------|
+| DOM Extraction | ✅ Complete | JS injection via Playwright, paint-order indexing |
+| Action Cache | ✅ Complete | Deterministic replay of successful actions |
+| Pattern Learner | ✅ Complete | Learns from successful runs, ChromaDB-backed |
+| Trajectory Memory | ✅ Complete | Few-shot learning from past runs |
+| Multi-Agent Debate | ✅ Complete | Multiple models vote on uncertain decisions |
+| RSA Reasoning | ✅ Complete | Multi-model + multi-language aggregation |
+| Vision Fallback | ✅ Complete | llama3.2-vision when DOM fails |
+| Meta-Study | ✅ Complete | Self-improvement tracking with loss functions |
+
+## Architecture
+
+### Decision Pipeline
+
+```
+Task → Cache Check → Pattern Match → LLM Decision → Debate (if uncertain) → Execute
+         ↓ hit           ↓ match
+      Replay          Use Pattern
+```
+
+### Key Files
+
+```
+surf/
+├── agent.py       # Main SurfAgent class
+├── navigator.py   # RecursiveNavigator - decision logic
+├── dom.py         # DOM extraction and formatting
+├── cache.py       # Action cache for deterministic replay
+├── learner.py     # Pattern learning (ChromaDB)
+├── memory.py      # Trajectory memory (few-shot)
+├── debate.py      # Multi-agent debate
+├── recursive.py   # RSA reasoning aggregation
+├── vision.py      # Vision fallback (llama3.2-vision)
+├── study.py       # Meta-study framework
+└── js/
+    └── buildDomTree.js  # DOM extraction script
+```
+
+## Self-Improvement Tracking
+
+The meta-study framework tracks performance with loss functions:
+
+```bash
+# Run benchmark tasks
+python -m surf.study
+
+# View trends
+python -m surf.study --history
+
+# Deep analysis
+python -m surf.study --analyze
+```
+
+### Loss Functions
+
+| Component | Weight | Measures |
 |-----------|--------|----------|
-| Helios MCP Server | ✅ Exists | `~/repos-aic/helios` |
-| Chrome Extension | ✅ Exists | Helios package |
-| opencode | ✅ Validated | [opencode.ai](https://opencode.ai) |
-| Example Config | ✅ Created | `configs/opencode.example.json` |
-| DOM Simplifier | 📋 If needed | This repo |
-| Agent Loop | 📋 If needed | This repo |
+| Task Failure | 50% | 1 - success_rate |
+| Efficiency | 25% | LLM calls above target |
+| Speed | 15% | Time above target |
+| Cache Miss | 10% | 1 - cache_utilization |
 
-## Model Recommendations
+**Target total loss: < 0.10** (excellent)
 
-For browser automation agents, prioritize tool-use and planning:
+See [docs/meta-study.md](docs/meta-study.md) for details.
 
-| Model | Size | Strengths | Use Case |
-|-------|------|-----------|----------|
-| DeepSeek-R1-Distill | 8-14B | Reasoning, planning | Primary agent brain |
-| Llama 3 Instruct | 8B | Instruction following | Fallback, smoother language |
-| Mistral Instruct | 7B | Efficient | Resource-constrained |
+## Design Principles
 
-## Key Insights
+1. **Correctness over speed** - Autonomous operation that's "mostly correct" even if slow
+2. **Deterministic when possible** - Cache hits and patterns before LLM calls
+3. **Learn from success** - Trajectory memory and pattern promotion
+4. **Multi-model consensus** - Debate reduces errors on uncertain decisions
+5. **Vision as fallback** - Don't fail on JS-heavy SPAs
 
-From research on local browser agents:
+## Models Used
 
-1. **DOM must be simplified** - Raw DOM destroys token budgets. Need semantic compression.
-2. **Strict tool schemas** - Local models need tighter constraints than Claude.
-3. **Element indexing** - Give clickable elements IDs like `[1]`, `[2]` for easy reference.
-4. **Retry at code level** - Let automation framework handle robustness, not the model.
+| Model | Purpose |
+|-------|---------|
+| `llama3:latest` | Primary decision making |
+| `llama3.2:latest` | Secondary model for debate |
+| `qwen3:14b` | Third model for consensus |
+| `llama3.2-vision` | Vision fallback |
 
-## Next Steps
+All via Ollama. No cloud API calls.
 
-1. [ ] Verify opencode MCP support
-2. [ ] Test Helios with opencode
-3. [ ] Profile token usage on real pages
-4. [ ] Build DOM simplifier if needed
-5. [ ] Create agent loop wrapper
+## Current Performance
+
+```
+Pass Rate:        100% (simple tasks)
+Total Loss:       ~0.11
+Cache Utilization: 17%
+Trend:            STABLE
+```
+
+## Documentation
+
+- [Architecture](docs/architecture.md) - System design
+- [Meta-Study](docs/meta-study.md) - Self-improvement framework
+- [Design Principles](docs/design-principles.md) - Why decisions were made
+- [Models](docs/models.md) - Model recommendations
 
 ## Related Projects
 
 - [Helios](~/repos-aic/helios) - Browser automation MCP server
-- [reeves-web](~/repos-personal/reeves-web) - Task management with MCP
-- [BrowserOS](https://github.com/anthropics/browserOS) - Reference for local browser agents
+- [Browser Use](https://github.com/browser-use/browser-use) - Inspiration for DOM extraction

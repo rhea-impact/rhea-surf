@@ -21,6 +21,7 @@ You will receive:
 1. The current URL and page title
 2. A list of interactive elements on the page, formatted as:
    [index] element_type "text" attributes
+   Elements marked [NAV] are navigation/menu items - skip these for content tasks
 
 You must respond with ONLY a JSON object (no other text):
 {
@@ -31,30 +32,36 @@ You must respond with ONLY a JSON object (no other text):
 }
 
 Actions:
-- navigate: Go to a URL. value = the full URL (include https://)
-- click: Click element. selector = element index like "[1]"
-- fill: Type into input. selector = element index, value = text to type
-- scroll: Scroll page. value = "up" or "down"
-- press: Press a key. value = key name like "Enter"
-- read: Read text from an element WITHOUT clicking. selector = element index. Use this to extract information.
-- done: Task is COMPLETE. value = the answer or result summary. USE THIS when you have the information requested.
+- read: Read text from an element WITHOUT clicking. Use this FIRST when you need information visible on the page.
+- done: Task is COMPLETE. value = the answer or result. USE THIS after reading what you need.
+- click: Click element. selector = element index like "[1]". Only use if you need to navigate to another page.
+- navigate: Go to a URL. value = the full URL. Only use to go to a different website.
+- fill: Type into input. selector = element index, value = text to type.
+- scroll: Scroll page. value = "up" or "down".
+- press: Press a key. value = key name like "Enter".
+
+IMPORTANT - READ FIRST RULE:
+If the task asks "what is...", "tell me...", "find...", or "read..." and the answer is visible in the element list:
+1. DO NOT CLICK - the info is already here
+2. Use "read" to extract the text from the element containing the answer
+3. Then use "done" to report it
 
 CRITICAL RULES:
 1. Use element indices [1], [2] etc - not CSS selectors
 2. One action at a time
-3. AFTER using "read" and getting a result in history, you MUST use "done" to report it
-4. If history shows you already read something, use "done" to report it NOW
-5. DO NOT read the same element twice - if history shows "read -> GOT: ...", use "done"
+3. LOOK AT THE ELEMENT TEXT - if an element's text contains your answer, use "read" on it
+4. After reading, immediately use "done" to report the result
+5. DO NOT click links just to "see" something - the text is already in the element list
 
-WORKFLOW:
-- Need info? Use "read" once to get it
-- Already read it? (check history) Use "done" to report
-- Navigation needed? Use "navigate" or "click"
-- Task complete? Use "done" with the answer
+EXAMPLE 1 - Information visible on page:
+Task: "What is the top story?"
+Elements: [1] link "Home"  [2] link "Breaking News: Scientists Discover New Planet"  [3] link "Sports"
+CORRECT: {"action": "read", "selector": "[2]", "reasoning": "Element [2] contains the top story title"}
+Then: {"action": "done", "value": "The top story is: Breaking News: Scientists Discover New Planet", "reasoning": "Read the story title"}
 
-Example - if task is "what is the first headline" and history shows:
-"Step 1: read -> GOT: Breaking: Major Discovery"
-Then respond: {"action": "done", "value": "The first headline is: Breaking: Major Discovery", "reasoning": "Already read the headline"}
+EXAMPLE 2 - Already read in history:
+History shows: "read -> GOT: Python is a programming language"
+CORRECT: {"action": "done", "value": "Python is a programming language", "reasoning": "Already read the answer"}
 """
 
 
@@ -72,6 +79,7 @@ class OllamaClient:
         title: str,
         elements: str,
         history: list[str] = None,
+        learned_patterns: str = None,
     ) -> Action:
         """
         Ask the LLM to decide the next action.
@@ -96,6 +104,9 @@ Title: {title}
 Interactive elements:
 {elements}
 """
+
+        if learned_patterns:
+            context += f"\n{learned_patterns}\n"
 
         if history:
             context += f"\nRecent actions:\n" + "\n".join(history[-5:])

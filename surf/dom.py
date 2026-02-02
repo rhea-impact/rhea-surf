@@ -1,32 +1,139 @@
-"""DOM extraction and simplification for LLMs."""
+"""
+DOM extraction and simplification for LLMs.
 
-import re
-from dataclasses import dataclass
-from typing import Optional
+Two extraction modes:
+1. Playwright JS injection (primary) - Full visibility, paint order, computed styles
+2. BeautifulSoup static (fallback) - Fast, works without browser
+"""
+
+import hashlib
+import json
+import os
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Optional, List, Dict, Any
+
+# BeautifulSoup for fallback mode
 from bs4 import BeautifulSoup
 
 
 @dataclass
-class InteractiveElement:
+class Element:
     """An interactive element on the page."""
     index: int
     tag: str
-    element_type: Optional[str]  # button, link, input, etc.
+    element_type: str
     text: str
     selector: str
-    attributes: dict
+    attributes: Dict[str, Any] = field(default_factory=dict)
+    bbox: Optional[Dict[str, int]] = None
+    is_visible: bool = True
+    is_interactive: bool = True
 
 
-def extract_interactive_elements(html: str, max_elements: int = 50) -> list[InteractiveElement]:
+@dataclass
+class DOMState:
+    """Current DOM state for a page."""
+    elements: List[Element]
+    url: str
+    title: str
+    dom_hash: str = ""
+
+    def __post_init__(self):
+        if not self.dom_hash:
+            self.dom_hash = self._compute_hash()
+
+    def _compute_hash(self) -> str:
+        """Hash interactive elements for cache matching."""
+        # Only hash interactive elements for stability
+        structure = [
+            (e.tag, e.text[:50], tuple(sorted(e.attributes.items())))
+            for e in self.elements if e.is_interactive
+        ]
+        return hashlib.md5(json.dumps(structure, sort_keys=True).encode()).hexdigest()[:12]
+
+
+# Load JS extraction script
+_JS_SCRIPT_PATH = Path(__file__).parent / "js" / "buildDomTree.js"
+_BUILD_DOM_TREE_JS: Optional[str] = None
+
+
+def _get_js_script() -> str:
+    """Load the buildDomTree.js script, cached."""
+    global _BUILD_DOM_TREE_JS
+    if _BUILD_DOM_TREE_JS is None:
+        if _JS_SCRIPT_PATH.exists():
+            _BUILD_DOM_TREE_JS = _JS_SCRIPT_PATH.read_text()
+        else:
+            raise FileNotFoundError(f"buildDomTree.js not found at {_JS_SCRIPT_PATH}")
+    return _BUILD_DOM_TREE_JS
+
+
+async def extract_dom_playwright(page) -> DOMState:
     """
-    Extract interactive elements from HTML.
+    Extract DOM using Playwright's JS injection.
 
-    Returns a simplified list with indices for easy reference by LLMs.
-    Target: ~200-400 tokens for typical pages.
+    This is the primary extraction method - uses computed styles,
+    paint order, and viewport filtering.
+
+    Args:
+        page: Playwright Page object
+
+    Returns:
+        DOMState with extracted elements
+    """
+    js_script = _get_js_script()
+
+    # Inject and execute the extraction script
+    raw_elements = await page.evaluate(js_script)
+
+    # Convert to Element objects
+    elements = [
+        Element(
+            index=e['index'],
+            tag=e['tag'],
+            element_type=e['type'],
+            text=e.get('text', ''),
+            selector=e['selector'],
+            attributes=e.get('attributes', {}),
+            bbox=e.get('bbox'),
+            is_visible=e.get('visible', True),
+            is_interactive=e.get('interactive', True),
+        )
+        for e in raw_elements
+    ]
+
+    return DOMState(
+        elements=elements,
+        url=page.url,
+        title=await page.title() or ""
+    )
+
+
+def extract_dom_static(html: str, url: str = "", title: str = "", max_elements: int = 50) -> DOMState:
+    """
+    Extract DOM using BeautifulSoup (static HTML parsing).
+
+    This is the fallback method - faster but misses JS-rendered content.
+
+    Args:
+        html: Raw HTML string
+        url: Page URL
+        title: Page title
+        max_elements: Maximum elements to extract
+
+    Returns:
+        DOMState with extracted elements
     """
     soup = BeautifulSoup(html, "html.parser")
     elements = []
     index = 1
+
+    # Extract title if not provided
+    if not title:
+        title_tag = soup.find("title")
+        if title_tag:
+            title = title_tag.get_text(strip=True)
 
     # Remove script, style, and hidden elements
     for tag in soup.find_all(["script", "style", "noscript"]):
@@ -61,12 +168,12 @@ def extract_interactive_elements(html: str, max_elements: int = 50) -> list[Inte
             el_type = tag_name
 
         # Get text content
-        text = el.get_text(strip=True)[:100]  # Truncate long text
+        text = el.get_text(strip=True)[:100]
         if not text:
             text = el.get("placeholder", "") or el.get("value", "") or el.get("aria-label", "")
 
         # Build selector
-        selector = build_selector(el)
+        selector = _build_selector_static(el)
 
         # Collect relevant attributes
         attrs = {}
@@ -75,23 +182,26 @@ def extract_interactive_elements(html: str, max_elements: int = 50) -> list[Inte
                 val = el.get(attr)
                 if isinstance(val, list):
                     val = " ".join(val)
-                attrs[attr] = val[:50]  # Truncate
+                attrs[attr] = str(val)[:50]
 
-        elements.append(InteractiveElement(
+        elements.append(Element(
             index=index,
             tag=tag_name,
             element_type=el_type,
             text=text[:100],
             selector=selector,
             attributes=attrs,
+            bbox=None,  # Not available in static mode
+            is_visible=True,
+            is_interactive=True,
         ))
         index += 1
 
-    return elements
+    return DOMState(elements=elements, url=url, title=title)
 
 
-def build_selector(el) -> str:
-    """Build a CSS selector for an element."""
+def _build_selector_static(el) -> str:
+    """Build a CSS selector for an element (BeautifulSoup)."""
     # Prefer ID
     if el.get("id"):
         return f"#{el.get('id')}"
@@ -107,7 +217,7 @@ def build_selector(el) -> str:
     # Fall back to tag + class
     classes = el.get("class", [])
     if classes:
-        class_str = ".".join(classes[:2])  # First 2 classes
+        class_str = ".".join(classes[:2])
         return f"{el.name}.{class_str}"
 
     # Last resort: tag + text content
@@ -118,7 +228,7 @@ def build_selector(el) -> str:
     return el.name
 
 
-def format_for_llm(elements: list[InteractiveElement]) -> str:
+def format_for_llm(elements: List[Element], include_bbox: bool = False) -> str:
     """
     Format elements for LLM consumption.
 
@@ -126,14 +236,42 @@ def format_for_llm(elements: list[InteractiveElement]) -> str:
     [1] button "Sign In"
     [2] input[email] placeholder="Email"
     [3] link "Forgot password?" href="/reset"
+
+    Args:
+        elements: List of Element objects
+        include_bbox: Whether to include bounding box info
+
+    Returns:
+        Formatted string for LLM prompt
     """
+    # Navigation patterns to label (includes site names)
+    nav_patterns = [
+        "home", "new", "past", "comments", "ask", "show", "jobs", "submit",
+        "login", "logout", "sign in", "sign up", "search", "menu", "about",
+        "contact", "help", "settings", "profile", "account", "hide", "discuss",
+        "hacker news", "github", "wikipedia", "google", "reddit", "twitter"
+    ]
+
     lines = []
     for el in elements:
         # Build description
         desc = f"[{el.index}] {el.element_type}"
 
+        # Check if this looks like navigation
+        is_nav = False
+        if el.text:
+            text_lower = el.text.lower().strip()
+            href = el.attributes.get("href", "")
+            # Mark as NAV if: matches nav pattern, OR short internal link (not http)
+            is_internal = not href.startswith("http")
+            is_nav = text_lower in nav_patterns or (len(text_lower) <= 8 and is_internal and el.element_type == "link")
+
         if el.text:
             desc += f' "{el.text}"'
+
+        # Label navigation elements
+        if is_nav:
+            desc += " [NAV]"
 
         # Add key attributes
         if el.attributes.get("placeholder"):
@@ -144,15 +282,50 @@ def format_for_llm(elements: list[InteractiveElement]) -> str:
                 href = href[:27] + "..."
             desc += f' href="{href}"'
 
+        # Optional bbox
+        if include_bbox and el.bbox:
+            desc += f" @({el.bbox['x']},{el.bbox['y']})"
+
         lines.append(desc)
 
     return "\n".join(lines)
+
+
+def format_dom_state(state: DOMState, include_bbox: bool = False) -> str:
+    """
+    Format full DOMState for LLM consumption.
+
+    Args:
+        state: DOMState object
+        include_bbox: Whether to include bounding box info
+
+    Returns:
+        Formatted string including URL, title, and elements
+    """
+    header = f"Page: {state.title}\nURL: {state.url}\n\nInteractive elements:\n"
+    elements_str = format_for_llm(state.elements, include_bbox)
+    return header + elements_str
+
+
+# Backward compatibility aliases
+InteractiveElement = Element
+
+
+def extract_interactive_elements(html: str, max_elements: int = 50) -> List[Element]:
+    """
+    Extract interactive elements from HTML (backward compatibility).
+
+    Use extract_dom_static() or extract_dom_playwright() for new code.
+    """
+    state = extract_dom_static(html, max_elements=max_elements)
+    return state.elements
 
 
 def test_dom_extraction():
     """Test DOM extraction on sample HTML."""
     sample_html = """
     <html>
+    <head><title>Test Page</title></head>
     <body>
         <nav>
             <a href="/" id="logo">Home</a>
@@ -171,11 +344,12 @@ def test_dom_extraction():
     </html>
     """
 
-    elements = extract_interactive_elements(sample_html)
-    formatted = format_for_llm(elements)
-    print("Extracted elements:")
+    state = extract_dom_static(sample_html, url="https://example.com", title="Test Page")
+    formatted = format_dom_state(state)
+    print("Extracted DOM state:")
     print(formatted)
-    print(f"\nTotal: {len(elements)} elements")
+    print(f"\nTotal: {len(state.elements)} elements")
+    print(f"DOM hash: {state.dom_hash}")
 
 
 if __name__ == "__main__":
