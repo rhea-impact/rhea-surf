@@ -1,0 +1,63 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama (local)",
+      "options": {
+        "baseURL": "http://localhost:11434/v1"
+      },
+      "models": {
+        "deepseek-r1:8b": {
+          "name": "DeepSeek R1 8B (reasoning)",
+          "limit": {
+            "context": 32000,
+            "output": 8192
+          }
+        },
+        "deepseek-r1:14b": {
+          "name": "DeepSeek R1 14B (reasoning)",
+          "limit": {
+            "context": 32000,
+            "output": 8192
+          }
+        },
+        "llama3:8b-instruct": {
+          "name": "Llama 3 8B Instruct",
+          "limit": {
+            "context": 8192,
+            "output": 4096
+          }
+        },
+        "llava:13b": {
+          "name": "LLaVA 13B (vision)",
+          "limit": {
+            "context": 4096,
+            "output": 2048
+          }
+        },
+        "qwen2-vl:7b": {
+          "name": "Qwen2-VL 7B (vision)",
+          "limit": {
+            "context": 8192,
+            "output": 4096
+          }
+        }
+      }
+    }
+  },
+
+  "mcp": {
+    "helios": {
+      "type": "local",
+      "enabled": true,
+      "command": ["node", "/Users/dshanklinbv/repos-aic/helios/packages/server/dist/index.js"]
+    }
+  },
+
+  "model": {
+    "default": "ollama/deepseek-r1:8b",
+    "vision": "ollama/llava:13b"
+  }
+}

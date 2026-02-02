@@ -32,7 +32,9 @@ Leverage existing infrastructure:
 
 ## Status
 
-🔬 **Research phase** - Documenting requirements and testing opencode + Helios integration.
+✅ **Validated** - OpenCode confirmed to support MCP servers + Ollama. Ready for implementation.
+
+See [docs/research/opencode-validated.md](docs/research/opencode-validated.md) for full research findings.
 
 ## Components
 
@@ -40,9 +42,10 @@ Leverage existing infrastructure:
 |-----------|--------|----------|
 | Helios MCP Server | ✅ Exists | `~/repos-aic/helios` |
 | Chrome Extension | ✅ Exists | Helios package |
-| opencode | ❓ To verify | TBD |
-| DOM Simplifier | 📋 Planned | This repo |
-| Agent Loop | 📋 Planned | This repo |
+| opencode | ✅ Validated | [opencode.ai](https://opencode.ai) |
+| Example Config | ✅ Created | `configs/opencode.example.json` |
+| DOM Simplifier | 📋 If needed | This repo |
+| Agent Loop | 📋 If needed | This repo |
 
 ## Model Recommendations
 
