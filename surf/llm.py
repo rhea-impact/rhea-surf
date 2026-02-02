@@ -68,7 +68,7 @@ CORRECT: {"action": "done", "value": "Python is a programming language", "reason
 class OllamaClient:
     """Client for Ollama local LLM."""
 
-    def __init__(self, model: str = "llama3:latest"):
+    def __init__(self, model: str = "llama3.1:8b"):
         self.model = model
         self.client = ollama.Client()
 
@@ -162,7 +162,7 @@ Interactive elements:
 
 def test_ollama():
     """Test Ollama client."""
-    client = OllamaClient(model="llama3:latest")
+    client = OllamaClient(model="llama3.1:8b")
 
     elements = """[1] link "Home" href="/"
 [2] link "About" href="/about"

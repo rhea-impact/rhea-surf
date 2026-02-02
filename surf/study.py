@@ -300,7 +300,7 @@ class StudyRunner:
 
             try:
                 nav = RecursiveNavigator(
-                    model="llama3.2:latest",
+                    model="llama3.1:8b",
                     max_depth=5,
                     use_cache=True,
                     use_recursive=False,

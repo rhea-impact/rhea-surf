@@ -40,10 +40,10 @@ rhea-surf/
 ## Models Used
 
 ```bash
-ollama pull llama3           # Primary decisions
-ollama pull llama3.2         # Debate participant
+ollama pull llama3.1:8b           # Primary decisions
+ollama pull gemma3n:e4b         # Debate participant
 ollama pull qwen3:14b        # Debate participant
-ollama pull llama3.2-vision  # Vision fallback
+ollama pull gemma3n:e4b-vision  # Vision fallback
 ```
 
 ## Running

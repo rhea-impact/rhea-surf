@@ -40,7 +40,7 @@ class TestSurfAgent:
     def agent(self):
         """Create agent instance."""
         return SurfAgent(
-            model="llama3:latest",
+            model="llama3.1:8b",
             headless=True,  # Run headless in tests
             max_steps=15,
             verbose=True,

@@ -102,7 +102,7 @@ class RecursiveNavigator:
         self.cache = ActionCache() if use_cache else None
         self.memory = TrajectoryMemory()  # Always use trajectory memory
         self.reasoner = RecursiveReasoner(
-            models=["qwen3:14b", "llama3.2:latest", "llama3:latest"],
+            models=["qwen3:14b", "llama3.1:8b", "gemma3n:e4b"],
             languages=["en", "zh", "es"]
         ) if use_recursive else None
 
@@ -770,7 +770,7 @@ def promote_cache_to_patterns(cache: ActionCache, learner: Learner, min_hits: in
 async def test_navigator():
     """Test recursive navigator with caching."""
     nav = RecursiveNavigator(
-        model="llama3.2:latest",
+        model="llama3.1:8b",
         max_depth=8,
         use_cache=True,
         use_recursive=False,  # Fast mode

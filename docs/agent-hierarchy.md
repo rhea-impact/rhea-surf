@@ -139,7 +139,7 @@ Evolve to **Option B** (Python orchestrator) if:
 | Role | Model | Reason |
 |------|-------|--------|
 | Main Agent | qwen3:14b | Better reasoning for planning |
-| Surf Agent | llama3:latest | Faster, sufficient for simple actions |
+| Surf Agent | llama3.1:8b | Faster, sufficient for simple actions |
 | Vision | llama3.2-vision | Screenshot analysis |
 
 Main agent can use larger model since it doesn't process DOM directly.

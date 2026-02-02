@@ -64,7 +64,7 @@ Requires Python 3.10+ and [Ollama](https://ollama.ai).
 
 ```bash
 # Install Ollama and pull models
-ollama pull llama3
+ollama pull llama3.1:8b
 ollama pull llama3.2-vision
 
 # Install rhea-surf

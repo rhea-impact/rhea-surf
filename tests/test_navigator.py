@@ -170,19 +170,19 @@ def get_navigator_config(complexity: str) -> dict:
     """Get navigator config based on test complexity."""
     configs = {
         "simple": {
-            "model": "llama3.2:latest",
+            "model": "llama3.1:8b",
             "use_recursive": False,
             "use_debate": False,
             "use_cache": True,
         },
         "medium": {
-            "model": "llama3.2:latest",
+            "model": "llama3.1:8b",
             "use_recursive": False,
             "use_debate": True,  # Enable debate for uncertain cases
             "use_cache": True,
         },
         "complex": {
-            "model": "llama3:latest",
+            "model": "llama3.1:8b",
             "use_recursive": True,  # Enable RSA for complex pages
             "use_debate": True,
             "use_cache": True,

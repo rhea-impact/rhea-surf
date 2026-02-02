@@ -64,7 +64,7 @@ class SurfAgent:
 
     def __init__(
         self,
-        model: str = "llama3:latest",
+        model: str = "llama3.1:8b",
         headless: bool = False,
         max_steps: int = 20,
         verbose: bool = True,
@@ -294,7 +294,7 @@ class SurfAgent:
 async def test_agent():
     """Test the agent on a simple task."""
     agent = SurfAgent(
-        model="llama3:latest",
+        model="llama3.1:8b",
         headless=False,
         max_steps=10,
         verbose=True,

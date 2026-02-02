@@ -187,7 +187,7 @@ Current task: {task}
 Multiple models vote on uncertain decisions.
 
 ```python
-debate = Debate(models=["llama3:latest", "llama3.2:latest", "qwen3:14b"])
+debate = Debate(models=["llama3.1:8b", "llama3.1:8b", "qwen3:14b"])
 
 result = await debate.run(
     task=task,
@@ -201,7 +201,7 @@ result = await debate.run(
 
 Recursive Self-Aggregation for complex decisions.
 
-- Multi-model: llama3, qwen3, llama3.2
+- Multi-model: llama3.1, qwen3, gemma3n
 - Multi-language: English, Chinese, Spanish
 - Aggregates 9 candidates (3 models × 3 languages)
 
@@ -275,8 +275,8 @@ See [meta-study.md](meta-study.md) for details.
 
 | Model | Purpose | Size |
 |-------|---------|------|
-| llama3:latest | Primary decisions | 8B |
-| llama3.2:latest | Debate participant | 3B |
+| llama3.1:8b | Primary decisions | 8B |
+| llama3.1:8b | Debate participant | 3B |
 | qwen3:14b | Debate participant | 14B |
 | llama3.2-vision | Vision fallback | 11B |
 

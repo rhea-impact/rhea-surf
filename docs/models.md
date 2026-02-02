@@ -28,7 +28,7 @@ ollama pull deepseek-r1:14b  # if GPU allows
 ### Fallback: Llama 3 Instruct (8B)
 
 ```bash
-ollama pull llama3:8b-instruct
+ollama pull llama3.1:8b
 ```
 
 **Why:**

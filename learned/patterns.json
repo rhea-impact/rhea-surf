@@ -1,0 +1,95 @@
+{
+  "patterns": [
+    {
+      "pattern_id": "cache_what is the main hea_read",
+      "domain": "example.com",
+      "pattern_type": "success",
+      "trigger": "what is the main heading on this page?",
+      "action": "read [1]",
+      "confidence": 0.95,
+      "source_runs": [],
+      "created_at": "2026-02-02T11:26:00.628669",
+      "times_used": 0,
+      "times_succeeded": 0,
+      "embedding": null
+    },
+    {
+      "pattern_id": "cache_what is one of the m_read",
+      "domain": "en.wikipedia.org",
+      "pattern_type": "success",
+      "trigger": "what is one of the main section links in the table of contents on this wikipedia page?",
+      "action": "read [33]",
+      "confidence": 0.95,
+      "source_runs": [],
+      "created_at": "2026-02-02T11:26:00.630064",
+      "times_used": 0,
+      "times_succeeded": 0,
+      "embedding": null
+    },
+    {
+      "pattern_id": "cache_read the main headin_read",
+      "domain": "en.wikipedia.org",
+      "pattern_type": "success",
+      "trigger": "read the main heading (h1) of this wikipedia page and tell me what it says",
+      "action": "read [24]",
+      "confidence": 0.95,
+      "source_runs": [],
+      "created_at": "2026-02-02T11:26:00.630787",
+      "times_used": 0,
+      "times_succeeded": 0,
+      "embedding": null
+    },
+    {
+      "pattern_id": "cache_read the main headin_read",
+      "domain": "en.wikipedia.org",
+      "pattern_type": "success",
+      "trigger": "read the main heading (h1) of this wikipedia page and tell me what it says",
+      "action": "read [11]",
+      "confidence": 0.95,
+      "source_runs": [],
+      "created_at": "2026-02-02T11:26:00.631290",
+      "times_used": 0,
+      "times_succeeded": 0,
+      "embedding": null
+    },
+    {
+      "pattern_id": "cache_what is the main hea_read",
+      "domain": "en.wikipedia.org",
+      "pattern_type": "success",
+      "trigger": "what is the main heading on the python programming language wikipedia page?",
+      "action": "read [11]",
+      "confidence": 0.9000000000000001,
+      "source_runs": [],
+      "created_at": "2026-02-02T11:26:00.631974",
+      "times_used": 0,
+      "times_succeeded": 0,
+      "embedding": null
+    },
+    {
+      "pattern_id": "cache_read the repository _navigate",
+      "domain": "github.com",
+      "pattern_type": "success",
+      "trigger": "read the repository description text shown near the top of this github page (usually says what the project is for)",
+      "action": "navigate [20]",
+      "confidence": 0.95,
+      "source_runs": [],
+      "created_at": "2026-02-02T11:26:00.631750",
+      "times_used": 0,
+      "times_succeeded": 0,
+      "embedding": null
+    },
+    {
+      "pattern_id": "cache_what is the title of_read",
+      "domain": "news.ycombinator.com",
+      "pattern_type": "success",
+      "trigger": "what is the title of the top story on hacker news?",
+      "action": "read [2]",
+      "confidence": 0.8200000000000001,
+      "source_runs": [],
+      "created_at": "2026-02-02T11:26:00.632176",
+      "times_used": 0,
+      "times_succeeded": 0,
+      "embedding": null
+    }
+  ]
+}

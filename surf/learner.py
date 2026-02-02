@@ -91,7 +91,7 @@ Respond with ONLY the JSON, no other text.
 class Learner:
     """Learn from run logs to improve future performance."""
 
-    def __init__(self, model: str = "llama3:latest", embed_model: str = "nomic-embed-text:latest"):
+    def __init__(self, model: str = "llama3.1:8b", embed_model: str = "nomic-embed-text:latest"):
         """Use a small/fast model for analysis, embedding model for search."""
         self.model = model
         self.embed_model = embed_model

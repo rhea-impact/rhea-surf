@@ -70,9 +70,9 @@ class Debate:
 
     # Models to use for debate (fast/cheap ones)
     DEFAULT_MODELS = [
-        "llama3:latest",
-        "llama3.2:latest",
+        "llama3.1:8b",
         "qwen3:14b",
+        "gemma3n:e4b",
     ]
 
     def __init__(self, models: list[str] = None):

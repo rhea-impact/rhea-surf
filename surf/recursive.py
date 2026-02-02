@@ -151,7 +151,7 @@ class RecursiveReasoner:
         aggregator_model: str = "qwen3:14b",
     ):
         # Use available models - qwen3:14b is best, llama3.2 and llama3 as backup
-        self.models = models or ["qwen3:14b", "llama3.2:latest", "llama3:latest"]
+        self.models = models or ["qwen3:14b", "llama3.1:8b", "gemma3n:e4b"]
         self.languages = languages or ["en", "zh", "es"]  # Multi-language by default
         self.aggregator_model = aggregator_model
         self.client = ollama.Client()
