@@ -1,6 +1,10 @@
-# rhea-surf
+<p align="center">
+  <img src="assets/logo.png" alt="rhea-surf logo" width="400">
+</p>
 
-**Your browser, your AI, your data.**
+<h1 align="center">rhea-surf</h1>
+
+<p align="center"><strong>Your browser, your AI, your data.</strong></p>
 
 An open-source browser assistant that runs entirely on your computer. No cloud. No subscriptions. No data leaving your machine.
 
