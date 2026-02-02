@@ -1,56 +1,24 @@
-# ship.yaml - How to release this project
-# Read by the 'ship' skillflow when you run [[skillflow:ship]]
-# All fields are optional except 'name'
+# How to release this project - read by reeves_ship
 
-# ============================================================================
-# IDENTITY
-# ============================================================================
-# How this project appears in listings and release notes
-
-name: Rhea Surf                    # Display name (not the repo name)
+name: Rhea Surf
 tagline: Browser automation that runs entirely offline using local LLMs
 description: Your browser, your AI, your data—no cloud required.
-logo: assets/logo.png              # Path to logo within this repo
-
-
-# ============================================================================
-# RELEASE
-# ============================================================================
-# How to create GitHub releases
+logo: assets/logo.png
 
 release:
-  github: true                     # Create GitHub release (vs just git tag)
-  tag_format: "v{version}"         # How to format the tag (v0.1.0, v0.2.0, etc)
-  changelog: auto                  # 'auto' generates from commits, or provide path to CHANGELOG.md
-
-
-# ============================================================================
-# LISTINGS
-# ============================================================================
-# Where to announce/list this project after release
-# Each entry is a website or registry to update
+  github: true
+  tag_format: "v{version}"
+  changelog: auto
 
 listings:
-  - target: rheaimpact.com         # Human-readable target name
-    repo: rhea-impact/rheaimpact-com  # GitHub repo containing the website
-    section: Free Software         # Section/area to add project to
-    # The skillflow will clone this repo, add the project, commit, and push
-
-
-# ============================================================================
-# VERIFY
-# ============================================================================
-# How to confirm the release actually worked
-# The skillflow will NOT complete until all checks pass
+  - target: rheaimpact.com
+    repo: rhea-impact/rheaimpact-com
+    section: Free Software
 
 verify:
-  wait_seconds: 60                 # Wait for deployments before checking
-
+  wait_seconds: 60
   checks:
-    # Check that GitHub release exists and is accessible
     - type: gh-release-exists
-
-    # Check that the project appears on the website
     - type: http-contains
       url: https://rheaimpact.com
-      contains: Rhea Surf          # Must find this text on the page
+      contains: Rhea Surf

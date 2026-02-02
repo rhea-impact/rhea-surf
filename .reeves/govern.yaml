@@ -1,86 +1,34 @@
-# govern.yaml - Rules for AI agents working on this project
-# Read by reeves_brain to enforce constraints and require approvals
-# These rules are injected at runtime - no hardcoded governance in the DB
-
-# ============================================================================
-# CONSTRAINTS
-# ============================================================================
-# Rules the AI must follow. Brain will refuse actions that violate these.
-# Each constraint is a natural language rule that gets checked before actions.
+# Rules for AI agents - read by reeves_brain
 
 constraints:
-  # Code quality
-  - "Do not commit code without running tests first"
-  - "Do not remove existing tests without explanation"
-
-  # Safety
-  - "Do not modify .env files or commit secrets"
-  - "Do not run destructive git commands (reset --hard, clean -f) without asking"
-
-  # Scope
-  - "Stay focused on browser automation - don't add unrelated features"
-
-
-# ============================================================================
-# SECRETS
-# ============================================================================
-# What secrets this project uses. Helps AI understand what's sensitive.
+  - Do not commit without running tests first
+  - Do not remove existing tests without explanation
+  - Do not modify .env files or commit secrets
+  - Stay focused on browser automation
 
 secrets:
-  # Secrets the AI may reference (but never log or expose)
-  allowed:
-    - OLLAMA_HOST              # Local Ollama endpoint
-
-  # Patterns that should never appear in code/commits
-  forbidden:
-    - "*_API_KEY"              # No cloud API keys
-    - "*_SECRET"               # No secrets in code
-    - "ANTHROPIC_*"            # This project is offline-only
-
-
-# ============================================================================
-# APPROVALS
-# ============================================================================
-# Actions that require human approval before proceeding
+  allowed: [OLLAMA_HOST]
+  forbidden: ["*_API_KEY", "*_SECRET", "ANTHROPIC_*"]
 
 approvals:
   required_for:
-    - "Adding new dependencies to requirements.txt"
-    - "Changing the model list in CLAUDE.md"
-    - "Modifying the meta-study loss functions"
-    - "Any changes to governance rules (this file)"
-
-  # Who can approve (GitHub usernames)
-  approvers:
-    - dshanklin
-
-
-# ============================================================================
-# BOUNDARIES
-# ============================================================================
-# What's in scope vs out of scope for this project
+    - Adding new dependencies
+    - Changing model list in CLAUDE.md
+    - Modifying meta-study loss functions
+    - Changes to this file
+  approvers: [dshanklin]
 
 boundaries:
   in_scope:
-    - "Browser automation with Playwright"
-    - "Local LLM inference via Ollama"
-    - "DOM extraction and caching"
-    - "Self-improvement tracking"
-
+    - Browser automation with Playwright
+    - Local LLM inference via Ollama
+    - DOM extraction and caching
+    - Self-improvement tracking
   out_of_scope:
-    - "Cloud API integrations"
-    - "User authentication"
-    - "Data persistence beyond local cache"
-
-
-# ============================================================================
-# AUDIT
-# ============================================================================
-# What to track for compliance/debugging
+    - Cloud API integrations
+    - User authentication
+    - Data persistence beyond local cache
 
 audit:
-  log_actions: true              # Log all agent actions to devlog
-  sensitive_patterns:            # Redact these patterns from logs
-    - "password"
-    - "secret"
-    - "token"
+  log_actions: true
+  sensitive_patterns: [password, secret, token]
