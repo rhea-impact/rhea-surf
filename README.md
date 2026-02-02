@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.png" alt="rhea-surf logo" width="400">
+  <img src="assets/social-preview.png" alt="rhea-surf logo" width="600">
 </p>
 
 <h1 align="center">rhea-surf</h1>
