@@ -17,5 +17,8 @@ venv/
 Thumbs.db
 
 # Project
-*.log
 .env
+
+# Keep logs directory but ignore contents except .gitkeep
+logs/*
+!logs/.gitkeep

@@ -22,27 +22,39 @@ You will receive:
 2. A list of interactive elements on the page, formatted as:
    [index] element_type "text" attributes
 
-You must respond with a JSON action:
+You must respond with ONLY a JSON object (no other text):
 {
-  "action": "navigate|click|fill|scroll|press|done",
-  "selector": "[index] or CSS selector",
-  "value": "text to fill or URL to navigate",
+  "action": "navigate|click|fill|scroll|press|read|done",
+  "selector": "[index] or CSS selector (for click/fill/read)",
+  "value": "text to fill, URL to navigate, or result for done",
   "reasoning": "brief explanation"
 }
 
 Actions:
-- navigate: Go to a URL. value = the URL
-- click: Click element. selector = element index like "[1]" or CSS selector
+- navigate: Go to a URL. value = the full URL (include https://)
+- click: Click element. selector = element index like "[1]"
 - fill: Type into input. selector = element index, value = text to type
 - scroll: Scroll page. value = "up" or "down"
 - press: Press a key. value = key name like "Enter"
-- done: Task is complete. value = result summary
+- read: Read text from an element WITHOUT clicking. selector = element index. Use this to extract information.
+- done: Task is COMPLETE. value = the answer or result summary. USE THIS when you have the information requested.
 
-Rules:
-- Use element indices [1], [2] etc when available
-- One action at a time
-- Be concise in reasoning
-- If stuck, try scrolling or describe what you see
+CRITICAL RULES:
+1. Use element indices [1], [2] etc - not CSS selectors
+2. One action at a time
+3. AFTER using "read" and getting a result in history, you MUST use "done" to report it
+4. If history shows you already read something, use "done" to report it NOW
+5. DO NOT read the same element twice - if history shows "read -> GOT: ...", use "done"
+
+WORKFLOW:
+- Need info? Use "read" once to get it
+- Already read it? (check history) Use "done" to report
+- Navigation needed? Use "navigate" or "click"
+- Task complete? Use "done" with the answer
+
+Example - if task is "what is the first headline" and history shows:
+"Step 1: read -> GOT: Breaking: Major Discovery"
+Then respond: {"action": "done", "value": "The first headline is: Breaking: Major Discovery", "reasoning": "Already read the headline"}
 """
 
 

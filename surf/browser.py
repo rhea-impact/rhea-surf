@@ -106,6 +106,18 @@ class Browser:
             print(f"Wait failed: {e}")
             return False
 
+    async def read_text(self, selector: str) -> str:
+        """Read text content from an element."""
+        try:
+            element = await self._page.query_selector(selector)
+            if element:
+                text = await element.text_content()
+                return text.strip() if text else ""
+            return ""
+        except Exception as e:
+            print(f"Read failed: {e}")
+            return ""
+
 
 async def test_browser():
     """Quick test of browser functionality."""

@@ -1,14 +1,31 @@
 """Surf agent - the main agent loop."""
 
 import asyncio
+import json
+import logging
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 from .browser import Browser, PageState
 from .dom import extract_interactive_elements, format_for_llm, InteractiveElement
 from .llm import OllamaClient, Action
+
+# Set up logging
+LOG_DIR = Path(__file__).parent.parent / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler(LOG_DIR / "agent.log"),
+        logging.StreamHandler(),
+    ],
+)
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -57,6 +74,7 @@ class SurfAgent:
         self.max_steps = max_steps
         self.verbose = verbose
         self._elements: list[InteractiveElement] = []
+        self._last_read_result: str = ""
 
     async def run(self, task: str, start_url: Optional[str] = None) -> AgentResult:
         """
@@ -72,31 +90,40 @@ class SurfAgent:
         result = AgentResult(task=task, success=False)
         history = []
 
+        # Create run log file
+        run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+        run_log = LOG_DIR / f"run_{run_id}.json"
+        run_data = {
+            "task": task,
+            "start_url": start_url,
+            "started_at": datetime.now().isoformat(),
+            "steps": [],
+        }
+
+        logger.info(f"=== Starting run {run_id} ===")
+        logger.info(f"Task: {task}")
+
         try:
             await self.browser.start()
 
             # Navigate to start URL if provided
             if start_url:
-                if self.verbose:
-                    print(f"[Agent] Navigating to {start_url}")
+                logger.info(f"Navigating to {start_url}")
                 await self.browser.navigate(start_url)
 
             # Main agent loop
             for step_num in range(1, self.max_steps + 1):
-                if self.verbose:
-                    print(f"\n[Agent] Step {step_num}/{self.max_steps}")
+                logger.info(f"--- Step {step_num}/{self.max_steps} ---")
 
                 # Get current state
                 state = await self.browser.get_state()
-                if self.verbose:
-                    print(f"[Agent] URL: {state.url}")
+                logger.info(f"URL: {state.url}")
 
                 # Extract elements
                 self._elements = extract_interactive_elements(state.html)
                 elements_text = format_for_llm(self._elements)
 
-                if self.verbose:
-                    print(f"[Agent] Found {len(self._elements)} interactive elements")
+                logger.info(f"Found {len(self._elements)} interactive elements")
 
                 # Ask LLM for action
                 action = self.llm.decide_action(
@@ -107,10 +134,10 @@ class SurfAgent:
                     history=history,
                 )
 
-                if self.verbose:
-                    print(f"[Agent] Action: {action.action_type}")
-                    if action.reasoning:
-                        print(f"[Agent] Reasoning: {action.reasoning}")
+                logger.info(f"Action: {action.action_type}")
+                logger.info(f"Selector: {action.selector}")
+                logger.info(f"Value: {action.value}")
+                logger.info(f"Reasoning: {action.reasoning}")
 
                 # Record step
                 step = AgentStep(
@@ -121,22 +148,52 @@ class SurfAgent:
                     success=True,
                 )
 
+                # Log step data
+                step_data = {
+                    "step_num": step_num,
+                    "timestamp": datetime.now().isoformat(),
+                    "url": state.url,
+                    "title": state.title,
+                    "elements_count": len(self._elements),
+                    "elements_sample": elements_text[:500],
+                    "action": {
+                        "type": action.action_type,
+                        "selector": action.selector,
+                        "value": action.value,
+                        "reasoning": action.reasoning,
+                    },
+                }
+
                 # Execute action
                 try:
                     success = await self._execute_action(action)
                     step.success = success
-                    history.append(f"Step {step_num}: {action.action_type} -> {'OK' if success else 'FAILED'}")
+                    step_data["success"] = success
+
+                    # Build history entry with read result if applicable
+                    if action.action_type == "read" and self._last_read_result:
+                        history_entry = f"Step {step_num}: read -> GOT: \"{self._last_read_result[:100]}\""
+                        step_data["read_result"] = self._last_read_result
+                    else:
+                        history_entry = f"Step {step_num}: {action.action_type} -> {'OK' if success else 'FAILED'}"
+                    history.append(history_entry)
+                    logger.info(f"Result: {'OK' if success else 'FAILED'}")
                 except Exception as e:
                     step.success = False
                     step.error = str(e)
+                    step_data["success"] = False
+                    step_data["error"] = str(e)
                     history.append(f"Step {step_num}: {action.action_type} -> ERROR: {e}")
+                    logger.error(f"Error: {e}")
 
                 result.steps.append(step)
+                run_data["steps"].append(step_data)
 
                 # Check if done
                 if action.action_type == "done":
                     result.success = True
                     result.summary = action.value or action.reasoning or "Task completed"
+                    logger.info(f"Task complete: {result.summary}")
                     break
 
                 # Small delay between actions
@@ -148,11 +205,22 @@ class SurfAgent:
 
         except Exception as e:
             result.summary = f"Agent error: {e}"
-            if self.verbose:
-                print(f"[Agent] Error: {e}")
+            logger.error(f"Agent error: {e}")
 
         finally:
             await self.browser.stop()
+
+        # Save run log
+        run_data["completed_at"] = datetime.now().isoformat()
+        run_data["success"] = result.success
+        run_data["final_url"] = result.final_url
+        run_data["summary"] = result.summary
+
+        with open(run_log, "w") as f:
+            json.dump(run_data, f, indent=2, default=str)
+
+        logger.info(f"Run log saved to {run_log}")
+        logger.info(f"=== Run {run_id} complete: {'SUCCESS' if result.success else 'FAILED'} ===")
 
         return result
 
@@ -187,11 +255,21 @@ class SurfAgent:
                 return await self.browser.press(action.value)
             return False
 
+        elif action_type == "read":
+            selector = self._resolve_selector(action.selector)
+            if selector:
+                text = await self.browser.read_text(selector)
+                logger.info(f"Read text: {text[:200] if text else '(empty)'}")
+                # Store the read result so we can include it in history
+                self._last_read_result = text
+                return bool(text)
+            return False
+
         elif action_type == "done":
             return True
 
         else:
-            print(f"[Agent] Unknown action type: {action_type}")
+            logger.warning(f"Unknown action type: {action_type}")
             return False
 
     def _resolve_selector(self, selector: Optional[str]) -> Optional[str]:

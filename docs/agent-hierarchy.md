@@ -138,8 +138,41 @@ Evolve to **Option B** (Python orchestrator) if:
 
 | Role | Model | Reason |
 |------|-------|--------|
-| Main Agent | DeepSeek-R1 14B | Better reasoning for planning |
-| Surf Agent | DeepSeek-R1 8B | Faster, sufficient for actions |
-| Vision | LLaVA 13B or Qwen2-VL 7B | Screenshot analysis |
+| Main Agent | qwen3:14b | Better reasoning for planning |
+| Surf Agent | llama3:latest | Faster, sufficient for simple actions |
+| Vision | llama3.2-vision | Screenshot analysis |
 
 Main agent can use larger model since it doesn't process DOM directly.
+
+## Hierarchical Models for Context Reduction
+
+**Key insight from testing:** Local models struggle with maintaining task state across steps.
+
+**Solution:** Use hierarchical model calls:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  COORDINATOR (cheap/fast model - llama3)                │
+│  - Receives task                                        │
+│  - Breaks into subtasks                                 │
+│  - Routes to specialists                                │
+└─────────────────┬───────────────────────────────────────┘
+                  │
+    ┌─────────────┼─────────────┐
+    │             │             │
+    ▼             ▼             ▼
+┌────────┐   ┌────────┐   ┌────────┐
+│READER  │   │CLICKER │   │FORM    │
+│llama3  │   │llama3  │   │FILLER  │
+│        │   │        │   │qwen3   │
+│One-shot│   │One-shot│   │        │
+│extract │   │click   │   │Multi-  │
+└────────┘   └────────┘   │step    │
+                          └────────┘
+```
+
+Benefits:
+1. Each model call has minimal context (just one subtask)
+2. Coordinator maintains overall state
+3. Specialists are stateless - can be cheap/fast
+4. Context never accumulates across steps
