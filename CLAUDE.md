@@ -1,57 +1,74 @@
 # rhea-surf
 
-Browser automation adapter for local LLMs via opencode.
+Standalone browser automation for local LLMs.
 
 ## What This Is
 
-A bridge that enables browser automation (via Helios) to work with local/offline models through opencode, avoiding cloud token limits.
+A complete browser automation system that runs entirely offline using Ollama. No external dependencies, no cloud APIs, no data leaving your machine.
 
 ## Project Structure
 
 ```
 rhea-surf/
-├── docs/
-│   ├── architecture.md    # System design
-│   ├── models.md          # Model recommendations
-│   └── research/          # Investigation notes
-├── surf/                  # Python package (if needed)
-│   ├── dom.py            # DOM simplification
-│   ├── agent.py          # Agent loop wrapper
-│   └── cli.py            # Optional CLI
-└── configs/              # Example configurations
+├── surf/                  # Core Python package
+│   ├── agent.py          # SurfAgent entry point
+│   ├── navigator.py      # Decision logic
+│   ├── dom.py            # DOM extraction
+│   ├── cache.py          # Action caching
+│   ├── learner.py        # Pattern learning
+│   ├── memory.py         # Trajectory memory
+│   ├── debate.py         # Multi-agent debate
+│   ├── recursive.py      # RSA reasoning
+│   ├── vision.py         # Vision fallback
+│   ├── study.py          # Self-improvement tracking
+│   └── js/
+│       └── buildDomTree.js
+├── tests/                 # Test suite
+├── docs/                  # Documentation
+│   ├── architecture.md   # System design
+│   ├── meta-study.md     # Loss functions
+│   └── research/         # Historical notes
+└── learned/              # ChromaDB patterns (gitignored)
 ```
 
 ## Dependencies
 
-- **Helios** (`~/repos-aic/helios`) - Browser automation MCP server
-- **opencode** - Local LLM CLI with MCP support
+- **Playwright** - Browser automation
 - **Ollama** - Local model runtime
+- **ChromaDB** - Pattern storage
 
-## Quick Reference
-
-### Helios Tools Available
-
-```
-tabs_list          - List open tabs
-navigate           - Go to URL
-read_page          - Get structured DOM
-screenshot         - Capture visible area
-click              - Click elements
-type               - Type text
-scroll             - Scroll page
-site_knowledge_*   - Learning/memory
-```
-
-### Recommended Models (Ollama)
+## Models Used
 
 ```bash
-ollama pull deepseek-r1:8b      # Primary - reasoning
-ollama pull llama3:8b-instruct  # Fallback - smooth
-ollama pull mistral:7b-instruct # Lightweight
+ollama pull llama3           # Primary decisions
+ollama pull llama3.2         # Debate participant
+ollama pull qwen3:14b        # Debate participant
+ollama pull llama3.2-vision  # Vision fallback
 ```
+
+## Running
+
+```bash
+# Single task
+python -m surf.cli "What is the top story on Hacker News?"
+
+# Study session (self-improvement)
+python -m surf.study
+
+# Tests
+pytest tests/
+```
+
+## Key Design Decisions
+
+1. **Playwright over Chrome extension** - More reliable, works headless
+2. **Multiple models for consensus** - Reduces errors on uncertain decisions
+3. **Cache-first architecture** - Deterministic replay when possible
+4. **Vision fallback** - Handle JS-heavy SPAs that break DOM extraction
+5. **Self-tracking** - Loss functions measure improvement over time
 
 ## Development Notes
 
-- This is primarily configuration + documentation
-- Only write code if DOM simplification or agent loop is needed
-- Test with Helios first to understand token usage
+- All inference is local via Ollama
+- No cloud API calls anywhere in the codebase
+- Research docs reference Helios (prior art we learned from, not a dependency)
