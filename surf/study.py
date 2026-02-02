@@ -30,24 +30,25 @@ import asyncio
 logger = logging.getLogger(__name__)
 
 # Default study tasks (varying complexity)
+# Task wording should be consistent to enable cache hits on repeated runs
 STUDY_TASKS = [
     {
         "name": "hn_top_story",
-        "task": "What is the title of the top story on Hacker News?",
+        "task": "what is the title of the top story?",
         "url": "https://news.ycombinator.com",
         "complexity": "simple",
         "timeout": 30,
     },
     {
         "name": "example_heading",
-        "task": "What is the main heading on this page?",
+        "task": "what is the main heading on this page?",
         "url": "https://example.com",
         "complexity": "simple",
         "timeout": 30,
     },
     {
         "name": "github_repo",
-        "task": "What is the name of this GitHub repository?",
+        "task": "what is the name of this repository?",
         "url": "https://github.com/anthropics/anthropic-sdk-python",
         "complexity": "simple",
         "timeout": 45,
