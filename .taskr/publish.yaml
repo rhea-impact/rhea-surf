@@ -1,0 +1,21 @@
+# Where this project gets published
+name: Rhea Surf
+repo: rhea-impact/rhea-surf
+
+# Display info for websites/listings
+display:
+  title: Rhea Surf
+  tagline: "Browser automation that runs entirely offline using local LLMs"
+  description: "Your browser, your AI, your data—no cloud required."
+  logo: assets/logo.png
+
+# Where to list this project
+listings:
+  - target: rheaimpact.com
+    section: "Free Software"
+    repo: rhea-impact/rheaimpact-com
+    file: index.html
+
+# Package registries (future)
+# registries:
+#   - pypi

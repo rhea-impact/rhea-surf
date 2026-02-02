@@ -1,0 +1,23 @@
+# How to verify this project deployed successfully
+
+checks:
+  - name: github-release
+    type: gh-release-exists
+    description: "GitHub release is published and accessible"
+
+  - name: repo-public
+    type: gh-repo-visibility
+    expected: public
+    description: "Repository is publicly accessible"
+
+  - name: website-listing
+    type: http-contains
+    url: https://rheaimpact.com
+    contains: "Rhea Surf"
+    description: "Project appears on rheaimpact.com"
+
+# How long to wait for deployments before checking
+wait_seconds: 60
+
+# What constitutes success
+require_all: true
