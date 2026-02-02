@@ -21,6 +21,21 @@ Autonomous browser agent that navigates websites and extracts information using 
 └─────────────────┘
 ```
 
+## Goals
+
+### Short-Term
+- **85%+ task completion** on common browser tasks (currently 100% simple, 33% medium)
+- **40%+ cache hit rate** for deterministic replay (currently 17%)
+- **Sub-10 second** average task completion for simple tasks
+- Robust handling of JS-heavy SPAs via vision fallback
+
+### Long-Term
+- **Fully autonomous web agent** that can complete multi-step workflows (shopping, form filling, research)
+- **Zero cloud dependency** - all inference runs locally on consumer hardware
+- **Self-improving system** that learns from every interaction and measurably improves over time
+- **Open benchmark suite** for comparing local browser automation approaches
+- **Plugin ecosystem** for site-specific adapters and custom actions
+
 ## Quick Start
 
 ```bash
