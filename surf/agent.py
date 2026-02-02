@@ -47,7 +47,7 @@ class SurfAgent:
 
     def __init__(
         self,
-        model: str = "deepseek-r1:8b",
+        model: str = "llama3:latest",
         headless: bool = False,
         max_steps: int = 20,
         verbose: bool = True,
@@ -216,7 +216,7 @@ class SurfAgent:
 async def test_agent():
     """Test the agent on a simple task."""
     agent = SurfAgent(
-        model="deepseek-r1:8b",
+        model="llama3:latest",
         headless=False,
         max_steps=10,
         verbose=True,

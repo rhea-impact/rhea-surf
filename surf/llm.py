@@ -49,7 +49,7 @@ Rules:
 class OllamaClient:
     """Client for Ollama local LLM."""
 
-    def __init__(self, model: str = "deepseek-r1:8b"):
+    def __init__(self, model: str = "llama3:latest"):
         self.model = model
         self.client = ollama.Client()
 
@@ -139,7 +139,7 @@ Interactive elements:
 
 def test_ollama():
     """Test Ollama client."""
-    client = OllamaClient(model="deepseek-r1:8b")
+    client = OllamaClient(model="llama3:latest")
 
     elements = """[1] link "Home" href="/"
 [2] link "About" href="/about"
