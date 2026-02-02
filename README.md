@@ -30,11 +30,16 @@ Autonomous browser agent that navigates websites and extracts information using 
 - Robust handling of JS-heavy SPAs via vision fallback
 
 ### Long-Term
+- **Chrome sidebar extension** - Chat with an offline model like Perplexity Comet, but fully local
+- **Browser control via natural language** - "Book me a flight to Denver" runs entirely on your machine
 - **Fully autonomous web agent** that can complete multi-step workflows (shopping, form filling, research)
 - **Zero cloud dependency** - all inference runs locally on consumer hardware
 - **Self-improving system** that learns from every interaction and measurably improves over time
 - **Open benchmark suite** for comparing local browser automation approaches
 - **Plugin ecosystem** for site-specific adapters and custom actions
+
+### Vision
+A world where anyone can have an AI assistant that controls their browser, protects their privacy, and costs nothing to run. No subscriptions, no data leaving your machine, no cloud rate limits.
 
 ## Quick Start
 
